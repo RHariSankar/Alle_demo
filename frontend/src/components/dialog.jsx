@@ -8,7 +8,7 @@ function ChatDialog(props) {
     let gridCss = { display: 'flex', flexDirection: 'row', marginBottom: '1%' }
     let boxCss = { border: 'solid', backgroundColor: 'white', padding: '0.5rem', paddingRight: '2%', fontSize: '16px' }
     let typogrpahCss = { maxWidth: '30vw', wordWrap: 'break-word' }
-    if (props?.data?.role === 'system') {
+    if ((props?.data?.role).toLowerCase() === 'system') {
         gridCss.justifyContent = 'flex-start'
         typogrpahCss.textAlign = 'left'
     } else {
@@ -21,11 +21,11 @@ function ChatDialog(props) {
             <Box style={boxCss}>
                 {props?.data?.type === 'chat' ?
                     <Typography variant="body1" style={typogrpahCss}>
-                        {props?.data?.text}
+                        {props?.data?.data}
                     </Typography> :
                     <img alt="not found"
                         width={"250px"}
-                        src={props?.data?.text}
+                        src={props?.data?.data}
                     />
                 }
 

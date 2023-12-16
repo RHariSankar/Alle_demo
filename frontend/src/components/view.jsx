@@ -2,25 +2,26 @@ import Grid from '@mui/material/Grid';
 import Chat from './chat';
 import Input from './input';
 import React, { useEffect, useState } from 'react';
+import { getAllChats } from '../apis/chat';
 
 
 let sampleData = [
     {
         "type": "chat",
         "role": "user",
-        "text": "hi show me links of red tshirts",
+        "data": "hi show me links of red tshirts",
         "dateTime": "2023-12-15T05:50:07.225Z"
     },
     {
         "type": "chat",
         "role": "system",
-        "text": "here you go",
+        "data": "here you go",
         "dateTime": "2023-12-15T05:50:07.225Z"
     },
     {
         "type": "chat",
         "role": "user",
-        "text": "thanks",
+        "data": "thanks",
         "dateTime": "2023-12-15T05:50:07.225Z"
     }
 ]
@@ -49,7 +50,7 @@ function View(props) {
         let op = {
             type: 'chat',
             role: 'system',
-            text: res,
+            data: res,
             dateTime: date.toISOString()
         }
         return op
@@ -58,6 +59,10 @@ function View(props) {
     useEffect(() => {
         //TODO: call get api to get chat and render
         // setInputValue(sampleData)
+        getAllChats().then((response) => {
+            console.log("api response", response)
+            setInputValue(response?.data)
+        })
     }, [])
 
 
@@ -70,7 +75,7 @@ function View(props) {
         } else {
             //TODO: api to get reply
             //mock reply
-            reply().then(op => setInputValue((prevState => [...prevState, op])))
+            // reply().then(op => setInputValue((prevState => [...prevState, op])))
         }
 
     };

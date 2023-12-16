@@ -6,6 +6,7 @@ import SendIcon from '@mui/icons-material/Send';
 import { FormControl } from '@mui/material';
 import { useState } from 'react';
 import { styled } from '@mui/material/styles';
+import { postChat } from '../apis/chat';
 
 let date = new Date()
 
@@ -36,12 +37,16 @@ function Input(props) {
         let inputData = {
             type: 'chat',
             role: 'user',
-            text: text,
+            data: text,
             dateTime: date.toISOString()
         }
         //TODO: async call api to get response from model 
         props?.submit(event, inputData);
         setText('')
+        postChat(inputData).then((response) => {
+            console.log(response)
+            props?.submit(event, response.data)
+        })
         //TODO: call props?.submit again with response
     }
 
