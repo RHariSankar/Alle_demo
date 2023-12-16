@@ -31,16 +31,18 @@ type ChatGPTResponse struct {
 }
 
 type ChatGPTClient struct {
-	URL    string
-	ApiKey string
-	Model  string
+	URL     string
+	ApiKey  string
+	Model   string
+	Context []GPTMesssage
 }
 
-func combineResponseChoices(choices []Choice) string {
+func (client *ChatGPTClient) combineResponseChoices(choices []Choice) string {
 
 	var output strings.Builder
 	for _, choice := range choices {
 		output.WriteString(choice.Message.Content)
+		client.Context = append(client.Context, choice.Message)
 	}
 	return output.String()
 
@@ -67,6 +69,7 @@ func (client *ChatGPTClient) ChatCompletion(query string) (string, error) {
 		Role:    "user",
 		Content: query,
 	}
+	chatGPTRequest.Message = append(chatGPTRequest.Message, client.Context...)
 	chatGPTRequest.Message = append(chatGPTRequest.Message, userMessage)
 
 	postBody, err := json.Marshal(chatGPTRequest)
@@ -110,7 +113,7 @@ func (client *ChatGPTClient) ChatCompletion(query string) (string, error) {
 		return "", err
 	}
 
-	reponseText := combineResponseChoices(chatGPTResponse.Choices)
+	reponseText := client.combineResponseChoices(chatGPTResponse.Choices)
 	return reponseText, nil
 
 }
