@@ -11,7 +11,8 @@ import (
 )
 
 type ChatHandler struct {
-	ChatGPTClient chatgpt.ChatGPTClient
+	ChatGPTClient  chatgpt.ChatGPTClient
+	ChatController *controllers.ChatController
 }
 
 func (ch *ChatHandler) AddChat(writer http.ResponseWriter, request *http.Request) {
@@ -23,9 +24,8 @@ func (ch *ChatHandler) AddChat(writer http.ResponseWriter, request *http.Request
 		log.Printf("couldn't convert request to object %s", err)
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
-	chatController := controllers.GetChatControllerInstance()
-	chatController.NewChat(&chatRequest)
-	response, err := ch.ChatGPTClient.ChatCompletion(chatRequest.Data)
+	ch.ChatController.NewChat(&chatRequest)
+	response, err := ch.ChatGPTClient.ChatCompletion(chatRequest.Text)
 	if err != nil {
 		log.Printf("couldn't get chatgpt response %s", err)
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -33,7 +33,7 @@ func (ch *ChatHandler) AddChat(writer http.ResponseWriter, request *http.Request
 	responseTextChat := chat.TextChat{
 		Type:     "chat",
 		Role:     "system",
-		Data:     response,
+		Text:     response,
 		DateTime: time.Now().Format(time.RFC3339Nano),
 	}
 	err = json.NewEncoder(writer).Encode(&responseTextChat)
@@ -41,15 +41,14 @@ func (ch *ChatHandler) AddChat(writer http.ResponseWriter, request *http.Request
 		log.Printf("couldn't convert response to json %s", err)
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
-	chatController.NewChat(&responseTextChat)
+	ch.ChatController.NewChat(&responseTextChat)
 
 }
 
 func (ch *ChatHandler) AllChat(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
-	chatController := controllers.GetChatControllerInstance()
-	chats, _ := chatController.AllChat()
+	chats, _ := ch.ChatController.AllChat()
 	log.Println(len(chats))
 	err := json.NewEncoder(writer).Encode(chats)
 	if err != nil {

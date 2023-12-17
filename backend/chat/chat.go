@@ -1,16 +1,27 @@
 package chat
 
 type Chat interface {
-	GetData() string
+	GetType() string
 }
 
 type TextChat struct {
 	Type     string `json:"type"`
 	Role     string `json:"role"`
-	Data     string `json:"data"`
+	Text     string `json:"data"`
 	DateTime string `json:"dateTime"`
 }
 
-func (tc *TextChat) GetData() string {
-	return tc.Data
+func (tc *TextChat) GetType() string {
+	return "text"
+}
+
+type ImageChat struct {
+	Type     string `json:"type"`
+	Role     string `json:"role"`
+	ImageId  string `json:"data"`
+	DateTime string `json:"dateTime"`
+}
+
+func (imageChat *ImageChat) GetType() string {
+	return "image"
 }

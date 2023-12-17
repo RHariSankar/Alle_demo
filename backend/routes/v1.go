@@ -2,8 +2,8 @@ package routes
 
 import (
 	chatgpt "alle/client/chatGPT"
+	"alle/controllers"
 	"alle/handlers"
-
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -28,17 +28,32 @@ func Router(chatGptClient chatgpt.ChatGPTClient) *mux.Router {
 	router := mux.NewRouter()
 	v1Router := router.PathPrefix("/api/v1").Subrouter()
 	ChatRoutes(v1Router, chatGptClient)
+	ImageRoutes(v1Router)
 	return router
 }
 
 func ChatRoutes(router *mux.Router, chatGptClient chatgpt.ChatGPTClient) {
 
 	chatHandler := handlers.ChatHandler{
-		ChatGPTClient: chatGptClient,
+		ChatGPTClient:  chatGptClient,
+		ChatController: controllers.GetChatControllerInstance(),
 	}
 
-	chatRouters := router.PathPrefix("/chat").Subrouter()
-	chatRouters.HandleFunc("", chatHandler.AddChat).Methods("POST")
-	chatRouters.HandleFunc("/all", chatHandler.AllChat).Methods("GET")
+	chatRouter := router.PathPrefix("/chat").Subrouter()
+	chatRouter.HandleFunc("", chatHandler.AddChat).Methods("POST")
+	chatRouter.HandleFunc("/all", chatHandler.AllChat).Methods("GET")
+
+}
+
+func ImageRoutes(router *mux.Router) {
+
+	imageHandler := handlers.ImageHandler{
+		ImageController: controllers.GetImageControllerInstance(),
+		ChatController:  controllers.GetChatControllerInstance(),
+	}
+
+	imageRoute := router.PathPrefix("/image").Subrouter()
+	imageRoute.HandleFunc("", imageHandler.AddImage).Methods("POST")
+	imageRoute.HandleFunc("/{id}", imageHandler.GetImage).Methods("GET")
 
 }
