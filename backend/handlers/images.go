@@ -46,8 +46,10 @@ func (ih *ImageHandler) AddImage(writer http.ResponseWriter, request *http.Reque
 		DateTime: time.Now().Format(time.RFC3339Nano),
 	}
 	imageMessage.Type = imageMessage.GetType()
+	imageResponse := make([]chat.Chat, 0)
+	imageResponse = append(imageResponse, &imageMessage)
 	writer.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(writer).Encode(&imageMessage)
+	err = json.NewEncoder(writer).Encode(&imageResponse)
 	if err != nil {
 		http.Error(writer, "Couldn't encode image response", http.StatusInternalServerError)
 		return

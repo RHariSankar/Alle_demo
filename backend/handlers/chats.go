@@ -25,7 +25,8 @@ func (ch *ChatHandler) AddChat(writer http.ResponseWriter, request *http.Request
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
 	ch.ChatController.NewChat(&chatRequest)
-	response, err := ch.ChatGPTClient.ChatCompletion(chatRequest.Text)
+	// response, err := ch.ChatGPTClient.ChatCompletion(chatRequest.Text)
+	response := "This is a sample response"
 	if err != nil {
 		log.Printf("couldn't get chatgpt response %s", err)
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -36,7 +37,9 @@ func (ch *ChatHandler) AddChat(writer http.ResponseWriter, request *http.Request
 		Text:     response,
 		DateTime: time.Now().Format(time.RFC3339Nano),
 	}
-	err = json.NewEncoder(writer).Encode(&responseTextChat)
+	responses := make([]chat.Chat, 0)
+	responses = append(responses, &responseTextChat)
+	err = json.NewEncoder(writer).Encode(&responses)
 	if err != nil {
 		log.Printf("couldn't convert response to json %s", err)
 		writer.WriteHeader(http.StatusInternalServerError)
