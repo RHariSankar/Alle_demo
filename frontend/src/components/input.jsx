@@ -7,6 +7,7 @@ import { FormControl } from '@mui/material';
 import { useState } from 'react';
 import { styled } from '@mui/material/styles';
 import { postChat } from '../apis/chat';
+import { uploadImage } from '../apis/image';
 
 let date = new Date()
 
@@ -40,28 +41,24 @@ function Input(props) {
             data: text,
             dateTime: date.toISOString()
         }
-        //TODO: async call api to get response from model 
         props?.submit(event, inputData);
         setText('')
         postChat(inputData).then((response) => {
             console.log(response)
             props?.submit(event, response.data)
+        }).catch((error) => {
+            console.error("couldn't send chat", error)
         })
-        //TODO: call props?.submit again with response
     }
 
     function fileUpload(event) {
         console.log('file upload', event.target.files[0]);
-        let url = URL.createObjectURL(event.target.files[0])
-        // call post api to save image
-        console.log('image', url)
-        let imageData = {
-            type: 'image',
-            role: 'user',
-            text: url,
-            dateTime: date.toISOString()
-        }
-        props.submit(event, imageData)
+        uploadImage(event.target.files[0]).then((response) => {
+            console.log('image uploaded', response.data)
+            props.submit(event, response.data)
+        }).catch((error) => {
+            console.error('Error uploading image', error)
+        })
     }
 
     return (

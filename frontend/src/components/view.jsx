@@ -86,7 +86,6 @@ function View(props) {
             {/* <div>{JSON.stringify(inputValue)}</div> */}
             <Chat inputData={inputValue}></Chat>
             <Input submit={inputSubmit}></Input>
-
         </Grid>
 
     )

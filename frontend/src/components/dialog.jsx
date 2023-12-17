@@ -1,6 +1,7 @@
 import { Box, FormLabel, Grid, Typography } from '@mui/material';
 import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
+import Image from './image';
 
 
 function ChatDialog(props) {
@@ -23,10 +24,7 @@ function ChatDialog(props) {
                     <Typography variant="body1" style={typogrpahCss}>
                         {props?.data?.data}
                     </Typography> :
-                    <img alt="not found"
-                        width={"250px"}
-                        src={props?.data?.data}
-                    />
+                    <Image data={props?.data}></Image>
                 }
 
             </Box>
@@ -35,4 +33,9 @@ function ChatDialog(props) {
 
 }
 
+
+/* <img alt="not found"
+                        width={"250px"}
+                        src={props?.data?.data}
+                    /> */
 export default ChatDialog
