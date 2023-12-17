@@ -69,14 +69,16 @@ function View(props) {
     const inputSubmit = (event, data) => {
         event.preventDefault();
         // TODO: api to save message to server
-        setInputValue((prevState) => [...prevState, data]);
-        if (data?.type == 'image') {
+        console.log('view submit: ', data)
+        // setInputValue((prevState) => [...prevState, ...data]);
+        setInputValue((prevState) => prevState.concat(data));
+        // if (data?.type == 'image') {
 
-        } else {
-            //TODO: api to get reply
-            //mock reply
-            // reply().then(op => setInputValue((prevState => [...prevState, op])))
-        }
+        // } else {
+        //TODO: api to get reply
+        //mock reply
+        // reply().then(op => setInputValue((prevState => [...prevState, op])))
+        // }
 
     };
 
