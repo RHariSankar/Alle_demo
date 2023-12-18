@@ -104,6 +104,7 @@ function Input(props) {
         setImageBlobUrl("")
         setImageUploadPopup(false)
         setSelectedFile(null)
+        setTags([])
 
     }
 
