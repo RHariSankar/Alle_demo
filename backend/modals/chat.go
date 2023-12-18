@@ -12,7 +12,7 @@ type TextChat struct {
 }
 
 func (tc *TextChat) GetType() string {
-	return "text"
+	return "chat"
 }
 
 type ImageChat struct {
