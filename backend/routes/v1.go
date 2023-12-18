@@ -55,5 +55,6 @@ func ImageRoutes(router *mux.Router) {
 	imageRoute := router.PathPrefix("/image").Subrouter()
 	imageRoute.HandleFunc("", imageHandler.AddImage).Methods("POST")
 	imageRoute.HandleFunc("/{id}", imageHandler.GetImage).Methods("GET")
+	imageRoute.HandleFunc("", imageHandler.GetImagesByTag).Methods("GET")
 
 }

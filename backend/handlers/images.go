@@ -25,6 +25,13 @@ func (ih *ImageHandler) AddImage(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 
+	tags := request.Form["tag"]
+	if len(tags) == 0 {
+		http.Error(writer, "No tags present", http.StatusBadRequest)
+		return
+	}
+	log.Printf("tags: %+v", tags)
+
 	image, handler, err := request.FormFile("image")
 	if err != nil {
 		http.Error(writer, "Error retrieving file from form", http.StatusBadRequest)
@@ -39,11 +46,12 @@ func (ih *ImageHandler) AddImage(writer http.ResponseWriter, request *http.Reque
 
 	log.Printf("handler %+v", handler.Filename)
 
-	id, _ := ih.ImageController.AddImage(handler.Filename, imageData)
+	id, imageTags, _ := ih.ImageController.AddImage(handler.Filename, imageData, tags)
 	imageMessage := chat.ImageChat{
 		Role:     "user",
 		ImageId:  id,
 		DateTime: time.Now().Format(time.RFC3339Nano),
+		Tags:     imageTags,
 	}
 	imageMessage.Type = imageMessage.GetType()
 	imageResponse := make([]chat.Chat, 0)
@@ -70,5 +78,25 @@ func (ih *ImageHandler) GetImage(writer http.ResponseWriter, request *http.Reque
 	}
 	writer.Header().Set("Content-Type", metaData.FileType)
 	writer.Write(image)
+
+}
+
+func (ih *ImageHandler) GetImagesByTag(writer http.ResponseWriter, request *http.Request) {
+
+	queryParams := request.URL.Query()
+	tags, exist := queryParams["tag"]
+	if !exist {
+		http.Error(writer, "Missing query parameter 'tags'", http.StatusBadRequest)
+		return
+	}
+	images, _ := ih.ImageController.GetImagesByTags(tags)
+
+	writer.Header().Set("Content-Type", "application/json")
+	err := json.NewEncoder(writer).Encode(images)
+	if err != nil {
+		http.Error(writer, "couldn't convert response to json", http.StatusInternalServerError)
+		return
+	}
+
 
 }

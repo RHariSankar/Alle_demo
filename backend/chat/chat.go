@@ -16,10 +16,11 @@ func (tc *TextChat) GetType() string {
 }
 
 type ImageChat struct {
-	Type     string `json:"type"`
-	Role     string `json:"role"`
-	ImageId  string `json:"data"`
-	DateTime string `json:"dateTime"`
+	Type     string   `json:"type"`
+	Role     string   `json:"role"`
+	ImageId  string   `json:"data"`
+	DateTime string   `json:"dateTime"`
+	Tags     []string `json:"tags"`
 }
 
 func (imageChat *ImageChat) GetType() string {

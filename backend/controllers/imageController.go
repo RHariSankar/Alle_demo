@@ -1,11 +1,13 @@
 package controllers
 
 import (
+	"alle/chat"
 	"fmt"
 	"log"
 	"mime"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -19,6 +21,7 @@ type ImageMetaData struct {
 type ImageController struct {
 	Images         map[string][]byte
 	ImageMetaDatas map[string]ImageMetaData
+	ImageTagsMap   map[string]map[string]bool
 }
 
 var imageControllerLock = &sync.Mutex{}
@@ -33,26 +36,43 @@ func GetImageControllerInstance() *ImageController {
 			imageController = &ImageController{
 				Images:         make(map[string][]byte),
 				ImageMetaDatas: make(map[string]ImageMetaData),
+				ImageTagsMap:   make(map[string]map[string]bool),
 			}
 		}
 	}
 	return imageController
 }
 
-func (ic *ImageController) AddImage(fileName string, image []byte) (string, error) {
+func (ic *ImageController) AddTagToImage(tags []string, imageId string) error {
 
-	uuid := uuid.NewString()
-	log.Printf("Adding image with id: %s", uuid)
-	ic.Images[uuid] = image
+	for _, tag := range tags {
+
+		if currImageIdMap, ok := ic.ImageTagsMap[tag]; ok {
+			currImageIdMap[imageId] = true
+		} else {
+			ic.ImageTagsMap[tag] = make(map[string]bool)
+			ic.ImageTagsMap[tag][imageId] = true
+		}
+
+	}
+	return nil
+}
+
+func (ic *ImageController) AddImage(fileName string, image []byte, tags []string) (string, []string, error) {
+
+	imageId := uuid.NewString()
+	log.Printf("Adding image with id: %s", imageId)
+	ic.Images[imageId] = image
 	metadata := ImageMetaData{
-		Id:       uuid,
+		Id:       imageId,
 		FileName: fileName,
 		FileType: mime.TypeByExtension(filepath.Ext(fileName)),
 	}
-	ic.ImageMetaDatas[uuid] = metadata
+	ic.ImageMetaDatas[imageId] = metadata
+	ic.AddTagToImage(tags, imageId)
 	log.Printf("image metadata: %+v", metadata)
 	log.Printf("No of images: %d", len(ic.Images))
-	return uuid, nil
+	return imageId, tags, nil
 
 }
 
@@ -66,5 +86,47 @@ func (ic *ImageController) GetImageAndMetaData(id string) (ImageMetaData, []byte
 		metaData := ic.ImageMetaDatas[id]
 		return metaData, image, nil
 	}
+
+}
+
+func (ic *ImageController) GetImagesByTag(tag string) ([]chat.Chat, error) {
+
+	if imageIds, ok := ic.ImageTagsMap[tag]; ok {
+		keys := make([]string, 0, len(imageIds))
+		for k := range imageIds {
+			keys = append(keys, k)
+		}
+		images := make([]chat.Chat, 0)
+		for _, id := range keys {
+			image := chat.ImageChat{
+				Type:     "image",
+				Role:     "system",
+				ImageId:  id,
+				DateTime: time.Now().Format(time.RFC3339),
+				Tags:     []string{tag},
+			}
+			images = append(images, &image)
+		}
+		return images, nil
+	} else {
+		message := chat.TextChat{
+			Type:     "chat",
+			Role:     "system",
+			Text:     "No image with tag " + tag,
+			DateTime: time.Now().Format(time.RFC3339),
+		}
+		return []chat.Chat{&message}, nil
+	}
+
+}
+
+func (ic *ImageController) GetImagesByTags(tags []string) ([]chat.Chat, error) {
+
+	images := make([]chat.Chat, 0)
+	for _, tag := range tags {
+		imagesForTag, _ := ic.GetImagesByTag(tag)
+		images = append(images, imagesForTag...)
+	}
+	return images, nil
 
 }
