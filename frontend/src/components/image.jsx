@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { getImage } from "../apis/image"
 import { Grid } from "@mui/material"
-
+import Chip from '@mui/material/Chip';
 
 function Image(props) {
     console.log("image", props);
@@ -29,7 +29,13 @@ function Image(props) {
             </Grid>
             <Grid item xs={12} md={12} style={{ display: "flex", flexDirection: "row-reverse" }}>
                 {
-                    props?.data?.tags.join(" ")
+                    props?.data?.tags.map((tag, index) => (
+                        <Chip
+                            key={index}
+                            label={tag}
+                            color="primary"
+                        />
+                    ))
                 }
             </Grid>
         </Grid>
