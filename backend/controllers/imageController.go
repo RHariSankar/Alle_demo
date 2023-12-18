@@ -98,23 +98,23 @@ func (ic *ImageController) GetImagesByTag(tag string) ([]modals.Chat, error) {
 		images := make([]modals.Chat, 0)
 		for _, id := range keys {
 			image := modals.ImageChat{
-				Type:     "image",
 				Role:     "system",
 				ImageId:  id,
 				DateTime: time.Now().Format(time.RFC3339),
 				Tags:     []string{tag},
 			}
+			image.Type = image.GetType()
 			images = append(images, &image)
 		}
 		return images, nil
 	} else {
-		message := modals.TextChat{
-			Type:     "chat",
+		chat := modals.TextChat{
 			Role:     "system",
 			Text:     "No image with tag " + tag,
 			DateTime: time.Now().Format(time.RFC3339),
 		}
-		return []modals.Chat{&message}, nil
+		chat.Type = chat.GetType()
+		return []modals.Chat{&chat}, nil
 	}
 
 }
