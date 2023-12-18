@@ -100,11 +100,12 @@ func (client *ChatGPTClient) ChatCompletion(query string) (string, error) {
 	}
 
 	if response.StatusCode != 200 {
-		log.Printf("ChatGPT api call returned non 200 statuscode %d %s", response.StatusCode, string(body))
-		return "", fmt.Errorf("ChatGPT api call returned non 200 statuscode")
+		errMessage := "ChatGPT api call returned non 200 statuscode"
+		log.Printf("%s %d %s", errMessage, response.StatusCode, string(body))
+		return "", fmt.Errorf(errMessage)
 	}
 
-	log.Printf("ChatGPT respones: %s", string(body))
+	log.Printf("ChatGPT respones for query %s: %s", query, string(body))
 
 	var chatGPTResponse ChatGPTResponse
 	err = json.Unmarshal(body, &chatGPTResponse)

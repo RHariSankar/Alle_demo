@@ -71,7 +71,6 @@ func (ic *ImageController) AddImage(fileName string, image []byte, tags []string
 	ic.ImageMetaDatas[imageId] = metadata
 	ic.AddTagToImage(tags, imageId)
 	log.Printf("image metadata: %+v", metadata)
-	log.Printf("No of images: %d", len(ic.Images))
 	return imageId, tags, nil
 
 }

@@ -72,6 +72,12 @@ type AzureCLUClient struct {
 	RequiredIntent      string
 }
 
+type AzureCLUNoEnitityError struct{}
+
+func (e *AzureCLUNoEnitityError) Error() string {
+	return "Couldn't find entities in query"
+}
+
 func (clu *AzureCLUClient) defaultRequest() AzureCLURequest {
 	azureCLURequest := AzureCLURequest{}
 	azureCLURequest.Kind = clu.Kind
@@ -149,7 +155,7 @@ func (clu *AzureCLUClient) GetIntentAndEntity(query string) (bool, []string, err
 	}
 
 	var azureCLUResponse AzureCLUResponse
-	log.Printf("AzureCLU Response: %s", string(body))
+	log.Printf("AzureCLU Response for query %s: %s", query, string(body))
 	err = json.Unmarshal(body, &azureCLUResponse)
 	if err != nil {
 		log.Printf("error converting Azure CLU response json %s", err)
@@ -158,7 +164,7 @@ func (clu *AzureCLUClient) GetIntentAndEntity(query string) (bool, []string, err
 
 	isIntent, entity := clu.getIntentAndEntity(azureCLUResponse)
 	if isIntent && entity == nil {
-		return false, nil, fmt.Errorf("couldn't get entity from query")
+		return false, nil, &AzureCLUNoEnitityError{}
 	}
 	return isIntent, entity, nil
 

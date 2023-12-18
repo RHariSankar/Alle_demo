@@ -5,7 +5,6 @@ import (
 	"alle/modals"
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"time"
 
@@ -30,7 +29,6 @@ func (ih *ImageHandler) AddImage(writer http.ResponseWriter, request *http.Reque
 		http.Error(writer, "No tags present", http.StatusBadRequest)
 		return
 	}
-	log.Printf("tags: %+v", tags)
 
 	image, handler, err := request.FormFile("image")
 	if err != nil {
@@ -43,8 +41,6 @@ func (ih *ImageHandler) AddImage(writer http.ResponseWriter, request *http.Reque
 		http.Error(writer, "Error reading file", http.StatusInternalServerError)
 		return
 	}
-
-	log.Printf("handler %+v", handler.Filename)
 
 	id, imageTags, _ := ih.ImageController.AddImage(handler.Filename, imageData, tags)
 	imageMessage := modals.ImageChat{

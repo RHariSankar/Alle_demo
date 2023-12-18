@@ -27,12 +27,13 @@ func GetChatControllerInstance() *ChatController {
 
 func (cc *ChatController) NewChat(chat modals.Chat) error {
 
+	log.Printf("Adding chat: %+v", chat)
 	cc.Chats = append(cc.Chats, &chat)
-	log.Printf("x: %d", len(cc.Chats))
 	return nil
 
 }
 
 func (cc *ChatController) AllChat() ([]*modals.Chat, error) {
+	log.Printf("Returning %d number of chats", len(cc.Chats))
 	return cc.Chats, nil
 }
