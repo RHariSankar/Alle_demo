@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"alle/client/azure"
 	chatgpt "alle/client/chatGPT"
 	"alle/controllers"
 	"alle/handlers"
@@ -24,19 +25,21 @@ func CorsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func Router(chatGptClient chatgpt.ChatGPTClient) *mux.Router {
+func Router(chatGptClient chatgpt.ChatGPTClient, azureCLUClient azure.AzureCLUClient) *mux.Router {
 	router := mux.NewRouter()
 	v1Router := router.PathPrefix("/api/v1").Subrouter()
-	ChatRoutes(v1Router, chatGptClient)
+	ChatRoutes(v1Router, chatGptClient, azureCLUClient)
 	ImageRoutes(v1Router)
 	return router
 }
 
-func ChatRoutes(router *mux.Router, chatGptClient chatgpt.ChatGPTClient) {
+func ChatRoutes(router *mux.Router, chatGptClient chatgpt.ChatGPTClient, azureCLUClient azure.AzureCLUClient) {
 
 	chatHandler := handlers.ChatHandler{
-		ChatGPTClient:  chatGptClient,
-		ChatController: controllers.GetChatControllerInstance(),
+		ChatGPTClient:   chatGptClient,
+		ChatController:  controllers.GetChatControllerInstance(),
+		AzureCLUClient:  azureCLUClient,
+		ImageController: *controllers.GetImageControllerInstance(),
 	}
 
 	chatRouter := router.PathPrefix("/chat").Subrouter()

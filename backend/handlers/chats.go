@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"alle/chat"
+	"alle/client/azure"
 	chatgpt "alle/client/chatGPT"
 	"alle/controllers"
 	"encoding/json"
@@ -11,13 +12,38 @@ import (
 )
 
 type ChatHandler struct {
-	ChatGPTClient  chatgpt.ChatGPTClient
-	ChatController *controllers.ChatController
+	ChatGPTClient   chatgpt.ChatGPTClient
+	ChatController  *controllers.ChatController
+	AzureCLUClient  azure.AzureCLUClient
+	ImageController controllers.ImageController
+}
+
+func (ch *ChatHandler) orchestrate(query string) ([]chat.Chat, error) {
+	isIntent, entities, err := ch.AzureCLUClient.GetIntentAndEntity(query)
+	log.Printf("azure clu returned %t %+v %s for query %s", isIntent, entities, err, query)
+	if err != nil {
+		return nil, err
+	}
+	if !isIntent {
+		chatGptResponse, err := ch.ChatGPTClient.ChatCompletion(query)
+		if err != nil {
+			log.Printf("couldn't get chatgpt response %s", err)
+			return nil, err
+		}
+		reply := chat.TextChat{
+			Type:     "chat",
+			Role:     "system",
+			Text:     chatGptResponse,
+			DateTime: time.Now().Format(time.RFC3339Nano),
+		}
+		return []chat.Chat{&reply}, nil
+	}
+	return ch.ImageController.GetImagesByTags(entities)
+
 }
 
 func (ch *ChatHandler) AddChat(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
+
 	var chatRequest chat.TextChat
 	err := json.NewDecoder(request.Body).Decode(&chatRequest)
 	if err != nil {
@@ -25,26 +51,23 @@ func (ch *ChatHandler) AddChat(writer http.ResponseWriter, request *http.Request
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
 	ch.ChatController.NewChat(&chatRequest)
-	// response, err := ch.ChatGPTClient.ChatCompletion(chatRequest.Text)
-	response := "This is a sample response"
+	responses, err := ch.orchestrate(chatRequest.Text)
 	if err != nil {
-		log.Printf("couldn't get chatgpt response %s", err)
-		writer.WriteHeader(http.StatusInternalServerError)
+		log.Printf("error in orchestrate  %s", err)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	responseTextChat := chat.TextChat{
-		Type:     "chat",
-		Role:     "system",
-		Text:     response,
-		DateTime: time.Now().Format(time.RFC3339Nano),
-	}
-	responses := make([]chat.Chat, 0)
-	responses = append(responses, &responseTextChat)
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(writer).Encode(&responses)
 	if err != nil {
 		log.Printf("couldn't convert response to json %s", err)
-		writer.WriteHeader(http.StatusInternalServerError)
+		http.Error(writer, "couldn't convert response to json", http.StatusInternalServerError)
+		return
 	}
-	ch.ChatController.NewChat(&responseTextChat)
+	for _, response := range responses {
+		ch.ChatController.NewChat(response)
+	}
 
 }
 
