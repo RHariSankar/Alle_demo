@@ -60,7 +60,7 @@ type AzureCLUResponse struct {
 	Result Result `json:"result"`
 }
 
-type AzureCLU struct {
+type AzureCLUClient struct {
 	APIMSubscriptionKey string
 	APIMRequestId       string
 	URL                 string
@@ -68,11 +68,11 @@ type AzureCLU struct {
 	ProjectName         string
 	DeploymentName      string
 	StringIndexType     string
-	IntentThreshold     float32
+	Threshold           float32
 	RequiredIntent      string
 }
 
-func (clu *AzureCLU) defaultRequest() AzureCLURequest {
+func (clu *AzureCLUClient) defaultRequest() AzureCLURequest {
 	azureCLURequest := AzureCLURequest{}
 	azureCLURequest.Kind = clu.Kind
 	azureCLURequest.AnalysisInput.ConversationItem.Id = "1"
@@ -85,27 +85,33 @@ func (clu *AzureCLU) defaultRequest() AzureCLURequest {
 	return azureCLURequest
 }
 
-func (clu *AzureCLU) getIntentAndEntity(azureCLUResponse AzureCLUResponse) (bool, string) {
+func (clu *AzureCLUClient) getIntentAndEntity(azureCLUResponse AzureCLUResponse) (bool, []string) {
 
 	if azureCLUResponse.Result.Prediction.TopIntent != clu.RequiredIntent {
-		return false, ""
+		return false, nil
 	}
 
 	for _, intent := range azureCLUResponse.Result.Prediction.Intents {
-		if intent.Category == clu.RequiredIntent && intent.ConfidenceScore < clu.IntentThreshold {
-			return false, ""
+		if intent.Category == clu.RequiredIntent && intent.ConfidenceScore < clu.Threshold {
+			return false, nil
 		}
 	}
 
 	if len(azureCLUResponse.Result.Prediction.Entities) > 0 {
-		return true, azureCLUResponse.Result.Prediction.Entities[0].Text
+		entities := make([]string, 0)
+		for _, entity := range azureCLUResponse.Result.Prediction.Entities {
+			if entity.ConfidenceScore >= clu.Threshold {
+				entities = append(entities, entity.Text)
+			}
+		}
+		return true, entities
 	} else {
-		return true, "all"
+		return true, nil
 	}
 
 }
 
-func (clu *AzureCLU) GetIntentAndEntity(query string) (bool, string, error) {
+func (clu *AzureCLUClient) GetIntentAndEntity(query string) (bool, []string, error) {
 
 	azureCLUrequest := clu.defaultRequest()
 	azureCLUrequest.AnalysisInput.ConversationItem.Text = query
@@ -113,7 +119,7 @@ func (clu *AzureCLU) GetIntentAndEntity(query string) (bool, string, error) {
 	postBody, err := json.Marshal(azureCLUrequest)
 	if err != nil {
 		log.Printf("couldn't convert request to json %s", err.Error())
-		return false, "", err
+		return false, nil, err
 	}
 	requestBody := bytes.NewBuffer(postBody)
 
@@ -127,19 +133,19 @@ func (clu *AzureCLU) GetIntentAndEntity(query string) (bool, string, error) {
 	response, err := client.Do(request)
 	if err != nil {
 		log.Printf("error fetching Azure CLU response %s", err)
-		return false, "", err
+		return false, nil, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != 200 {
-		log.Printf("ChatGPT api call returned non 200 statuscode %s", err)
-		return false, "", fmt.Errorf("ChatGPT api call returned non 200 statuscode")
+		log.Printf("AzureCLU api call returned non 200 statuscode %s", err)
+		return false, nil, fmt.Errorf("AzureCLU api call returned non 200 statuscode")
 	}
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Printf("error fetching Azure CLU response body %s", err)
-		return false, "", err
+		return false, nil, err
 	}
 
 	var azureCLUResponse AzureCLUResponse
@@ -147,10 +153,13 @@ func (clu *AzureCLU) GetIntentAndEntity(query string) (bool, string, error) {
 	err = json.Unmarshal(body, &azureCLUResponse)
 	if err != nil {
 		log.Printf("error converting Azure CLU response json %s", err)
-		return false, "", err
+		return false, nil, err
 	}
 
 	isIntent, entity := clu.getIntentAndEntity(azureCLUResponse)
+	if isIntent && entity == nil {
+		return false, nil, fmt.Errorf("couldn't get entity from query")
+	}
 	return isIntent, entity, nil
 
 }
