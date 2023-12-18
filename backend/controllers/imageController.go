@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"alle/chat"
+	"alle/modals"
 	"fmt"
 	"log"
 	"mime"
@@ -89,16 +89,16 @@ func (ic *ImageController) GetImageAndMetaData(id string) (ImageMetaData, []byte
 
 }
 
-func (ic *ImageController) GetImagesByTag(tag string) ([]chat.Chat, error) {
+func (ic *ImageController) GetImagesByTag(tag string) ([]modals.Chat, error) {
 
 	if imageIds, ok := ic.ImageTagsMap[tag]; ok {
 		keys := make([]string, 0, len(imageIds))
 		for k := range imageIds {
 			keys = append(keys, k)
 		}
-		images := make([]chat.Chat, 0)
+		images := make([]modals.Chat, 0)
 		for _, id := range keys {
-			image := chat.ImageChat{
+			image := modals.ImageChat{
 				Type:     "image",
 				Role:     "system",
 				ImageId:  id,
@@ -109,20 +109,20 @@ func (ic *ImageController) GetImagesByTag(tag string) ([]chat.Chat, error) {
 		}
 		return images, nil
 	} else {
-		message := chat.TextChat{
+		message := modals.TextChat{
 			Type:     "chat",
 			Role:     "system",
 			Text:     "No image with tag " + tag,
 			DateTime: time.Now().Format(time.RFC3339),
 		}
-		return []chat.Chat{&message}, nil
+		return []modals.Chat{&message}, nil
 	}
 
 }
 
-func (ic *ImageController) GetImagesByTags(tags []string) ([]chat.Chat, error) {
+func (ic *ImageController) GetImagesByTags(tags []string) ([]modals.Chat, error) {
 
-	images := make([]chat.Chat, 0)
+	images := make([]modals.Chat, 0)
 	for _, tag := range tags {
 		imagesForTag, _ := ic.GetImagesByTag(tag)
 		images = append(images, imagesForTag...)

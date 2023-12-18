@@ -1,4 +1,4 @@
-package chat
+package modals
 
 type Chat interface {
 	GetType() string

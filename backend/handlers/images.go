@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"alle/chat"
 	"alle/controllers"
+	"alle/modals"
 	"encoding/json"
 	"io"
 	"log"
@@ -47,14 +47,14 @@ func (ih *ImageHandler) AddImage(writer http.ResponseWriter, request *http.Reque
 	log.Printf("handler %+v", handler.Filename)
 
 	id, imageTags, _ := ih.ImageController.AddImage(handler.Filename, imageData, tags)
-	imageMessage := chat.ImageChat{
+	imageMessage := modals.ImageChat{
 		Role:     "user",
 		ImageId:  id,
 		DateTime: time.Now().Format(time.RFC3339Nano),
 		Tags:     imageTags,
 	}
 	imageMessage.Type = imageMessage.GetType()
-	imageResponse := make([]chat.Chat, 0)
+	imageResponse := make([]modals.Chat, 0)
 	imageResponse = append(imageResponse, &imageMessage)
 	writer.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(writer).Encode(&imageResponse)
@@ -97,6 +97,5 @@ func (ih *ImageHandler) GetImagesByTag(writer http.ResponseWriter, request *http
 		http.Error(writer, "couldn't convert response to json", http.StatusInternalServerError)
 		return
 	}
-
 
 }

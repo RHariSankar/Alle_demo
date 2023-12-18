@@ -1,13 +1,13 @@
 package controllers
 
 import (
-	"alle/chat"
+	"alle/modals"
 	"log"
 	"sync"
 )
 
 type ChatController struct {
-	Chats []*chat.Chat
+	Chats []*modals.Chat
 }
 
 var chatControllerLock = &sync.Mutex{}
@@ -19,13 +19,13 @@ func GetChatControllerInstance() *ChatController {
 		chatControllerLock.Lock()
 		defer chatControllerLock.Unlock()
 		if chatController == nil {
-			chatController = &ChatController{Chats: make([]*chat.Chat, 0)}
+			chatController = &ChatController{Chats: make([]*modals.Chat, 0)}
 		}
 	}
 	return chatController
 }
 
-func (cc *ChatController) NewChat(chat chat.Chat) error {
+func (cc *ChatController) NewChat(chat modals.Chat) error {
 
 	cc.Chats = append(cc.Chats, &chat)
 	log.Printf("x: %d", len(cc.Chats))
@@ -33,6 +33,6 @@ func (cc *ChatController) NewChat(chat chat.Chat) error {
 
 }
 
-func (cc *ChatController) AllChat() ([]*chat.Chat, error) {
+func (cc *ChatController) AllChat() ([]*modals.Chat, error) {
 	return cc.Chats, nil
 }

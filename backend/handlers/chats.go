@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"alle/chat"
+	"alle/modals"
 	"alle/client/azure"
 	chatgpt "alle/client/chatGPT"
 	"alle/controllers"
@@ -18,7 +18,7 @@ type ChatHandler struct {
 	ImageController controllers.ImageController
 }
 
-func (ch *ChatHandler) orchestrate(query string) ([]chat.Chat, error) {
+func (ch *ChatHandler) orchestrate(query string) ([]modals.Chat, error) {
 	isIntent, entities, err := ch.AzureCLUClient.GetIntentAndEntity(query)
 	log.Printf("azure clu returned %t %+v %s for query %s", isIntent, entities, err, query)
 	if err != nil {
@@ -30,13 +30,13 @@ func (ch *ChatHandler) orchestrate(query string) ([]chat.Chat, error) {
 			log.Printf("couldn't get chatgpt response %s", err)
 			return nil, err
 		}
-		reply := chat.TextChat{
+		reply := modals.TextChat{
 			Type:     "chat",
 			Role:     "system",
 			Text:     chatGptResponse,
 			DateTime: time.Now().Format(time.RFC3339Nano),
 		}
-		return []chat.Chat{&reply}, nil
+		return []modals.Chat{&reply}, nil
 	}
 	return ch.ImageController.GetImagesByTags(entities)
 
@@ -44,7 +44,7 @@ func (ch *ChatHandler) orchestrate(query string) ([]chat.Chat, error) {
 
 func (ch *ChatHandler) AddChat(writer http.ResponseWriter, request *http.Request) {
 
-	var chatRequest chat.TextChat
+	var chatRequest modals.TextChat
 	err := json.NewDecoder(request.Body).Decode(&chatRequest)
 	if err != nil {
 		log.Printf("couldn't convert request to object %s", err)
